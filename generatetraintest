@@ -56,6 +56,24 @@ function HandleAlirootError
   esac
  }
 
+function SafeReadlink
+  {
+    decodepath=$1
+    result
+    if [ "x$(uname -a | grep Darwin)" ]; then
+      # MacOS, needs greadlink from homebrew
+      result=$(greadlink -f $1)
+    else
+      result=$(readlink -f $1)
+    fi
+    return $result 
+  }
+
+SOUCEBASE=`dirname $0`
+SafeReadlink $SOURCEBASE
+SOURCEBASE=$?
+MACRODIR=$SOURCEBASE/legotrain_helper_macros
+
 CheckAliRoot
 result=$?
 if [ $result -ne 0 ]; then
@@ -74,10 +92,10 @@ source env.sh
 generatescript=
 if [ "x$CHILD_DATASETS" != "x" ]; then
 	if [ $CHILD_DATASETS -gt 1 ]; then
-		generatescript=~/bin/legotrain_generate_meta.C
+		generatescript=$MACRODIR/legotrain_generate_meta.C
 		echo "Generating for meta dataset"
 	else
-		generatescript=~/bin/legotrain_generate_single.C
+		generatescript=$MACRODIR/legotrain_generate_single.C
 		echo "Generating for single dataset"
 	fi
 else
