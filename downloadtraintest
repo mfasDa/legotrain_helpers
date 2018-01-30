@@ -1,0 +1,20 @@
+#! /bin/bash
+
+function Usage
+  {
+    echo "Usage: downloadtraintest URL"
+    echo ""
+    echo "Downloads the test package from the URL"
+    echo "Parameters:"
+    echo "  URL: URL of the train test package"
+  }
+
+if [ $# -lt 1 ]; then Usage; exit 1; fi
+
+URL=$1
+
+fls=(MLTrainDefinition.cfg env.sh generator_customization.C	globalvariables.C handlers.C)
+for f in ${fls[@]}; do
+  echo Downloading file $f
+  curl -L $URL/$f -o $f
+done

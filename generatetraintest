@@ -1,0 +1,88 @@
+#! /bin/bash
+
+function FindFiles
+  {
+    fls=(MLTrainDefinition.cfg env.sh generator_customization.C	globalvariables.C handlers.C)
+    hasfound=0
+    for f in ${fls[@]}; do
+      if [ -f `pwd`/$f ]; then
+        let "hasfound++"
+      fi
+    done
+    if [ $hasfound -eq ${#fls[@]} ]; then
+      return 1
+    else
+      return 0
+    fi
+  }
+
+function CheckAliRoot
+  {
+    # ERRORCODES:
+    # 100 - no ROOT defined
+    # 101 - ROOT executable not Found
+    # 200 - ALICE_ROOT not defined
+    # 201 - no ARVersion.h in ALICE_ROOT/include
+    # 300 - ALICE_PHYSICS not defined
+    # 301 - no APVersion.h in ALICE_PHYSICS/include
+    lenROOT=$(echo $ROOTSYS | awk '{print length($1);}')
+    lenALIROOT=$(echo $ALICE_ROOT | awk '{print length($1);}')
+    lenALIPHYSICS=$(echo $ALICE_PHYSICS | awk '{print length($1);}')
+
+    if [ $lenROOT -eq 0 ]; then return 100; fi
+    if [ ! -f $ROOTSYS/bin/root ]; then return 101; fi
+    if [ $lenALIROOT -eq 0 ]; then return 200; fi
+    if [ ! -f $ALICE_ROOT/include/ARVersion.h ]; then return 201; fi
+    if [ $lenALIPHYSICS -eq 0 ]; then return 300; fi
+    if [ ! -f $ALICE_PHYSICS/include/APVersion.h ]; then return 301; fi
+    return 0
+  }
+
+function HandleAlirootError
+ {
+   case $1 in
+    100)  echo "ROOTSYS undefined"
+          ;;
+    101)  echo "ROOTSYS not pointing to a valid ROOT installation"
+          ;;
+    200)  echo "ALICE_ROOT not defined"
+          ;;
+    201)  echo "ALICE_ROOT not pointing to a valid AliRoot installation"
+          ;;
+    301)  echo "ALICE_PHYSICS not defined"
+          ;;
+    302)  echo "ALICE_PHYSICS not pointing to a valid AliPhysics installation"
+          ;;
+  esac
+ }
+
+CheckAliRoot
+result=$?
+if [ $result -ne 0 ]; then
+  HandleAlirootError $result
+  exit 1
+fi
+
+FindFiles
+result=$?
+if [ $result -ne 1 ]; then
+  echo "Not all files needed for the test found. Please download them first"
+  exit 2
+fi
+
+source env.sh
+generatescript=
+if [ "x$CHILD_DATASETS" != "x" ]; then
+	if [ $CHILD_DATASETS -gt 1 ]; then
+		generatescript=~/bin/legotrain_generate_meta.C
+		echo "Generating for meta dataset"
+	else
+		generatescript=~/bin/legotrain_generate_single.C
+		echo "Generating for single dataset"
+	fi
+else
+	generatescript=~/bin/legotrain_generate_single.C
+	echo "Generating for single dataset"
+fi
+echo "Using generate script $generatescript"
+root -b -q $generatescript
