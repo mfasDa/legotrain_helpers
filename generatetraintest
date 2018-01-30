@@ -99,7 +99,7 @@ if [ "x$CHILD_DATASETS" != "x" ]; then
 		echo "Generating for single dataset"
 	fi
 else
-	generatescript=~/bin/legotrain_generate_single.C
+	generatescript=$MACRODIR/legotrain_generate_single.C
 	echo "Generating for single dataset"
 fi
 echo "Using generate script $generatescript"
