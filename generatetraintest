@@ -1,5 +1,7 @@
 #! /bin/bash
 
+readlinkresult=
+
 function FindFiles
   {
     fls=(MLTrainDefinition.cfg env.sh generator_customization.C	globalvariables.C handlers.C)
@@ -58,21 +60,20 @@ function HandleAlirootError
 
 function SafeReadlink
   {
-    decodepath=$1
-    result=
+    local decodepath=$1
+    local result=
     if [ "x$(uname -a | grep Darwin)"  != "x" ]; then
       # MacOS, needs greadlink from homebrew
-      result=$(greadlink -f $1)
+      result=$(greadlink -f $decodepath)
     else
-      result=$(readlink -f $1)
+      result=$(readlink -f $decodepath)
     fi
-    return $result 
+    readlinkresult=$result 
   }
 
-SOUCEBASE=`dirname $0`
-SafeReadlink $SOURCEBASE
-SOURCEBASE=$?
-MACRODIR=$SOURCEBASE/legotrain_helper_macros
+SafeReadlink $0
+SOURCEBASE=$readlinkresult
+MACRODIR=`dirname $SOURCEBASE`/legotrain_helper_macros
 
 CheckAliRoot
 result=$?
