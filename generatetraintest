@@ -59,8 +59,8 @@ function HandleAlirootError
 function SafeReadlink
   {
     decodepath=$1
-    result
-    if [ "x$(uname -a | grep Darwin)" ]; then
+    result=
+    if [ "x$(uname -a | grep Darwin)"  != "x" ]; then
       # MacOS, needs greadlink from homebrew
       result=$(greadlink -f $1)
     else
