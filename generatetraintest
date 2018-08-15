@@ -100,8 +100,14 @@ if [ "x$CHILD_DATASETS" != "x" ]; then
 		echo "Generating for single dataset"
 	fi
 else
-	generatescript=$MACRODIR/legotrain_generate_single.C
-	echo "Generating for single dataset"
+	# check for MC gen train
+	if [ "X$GEN_MACRO_PATH" != "x" ]; then
+		generatescript=$MACRODIR/legotrain_generate_meta.C
+		echo "Generating for MCgen dataset (meta macro)"
+	else 
+		generatescript=$MACRODIR/legotrain_generate_single.C
+		echo "Generating for single dataset"
+	fi
 fi
 echo "Using generate script $generatescript"
 root -b -q $generatescript
