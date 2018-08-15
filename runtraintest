@@ -71,4 +71,9 @@ if [ $result -ne 1 ]; then
 fi
 
 source env.sh
-root -b -q lego_train.C
+MYEXECUTABLE=root
+if [ "x$GEN_MACRO_PATH" != "x" ]; then
+  MYEXECUTABLE=aliroot
+fi
+cmd=$(printf "%s -b -q lego_train.C" $MYEXECUTABLE)
+eval $cmd

@@ -101,7 +101,7 @@ if [ "x$CHILD_DATASETS" != "x" ]; then
 	fi
 else
 	# check for MC gen train
-	if [ "X$GEN_MACRO_PATH" != "x" ]; then
+	if [ "x$GEN_MACRO_PATH" != "x" ]; then
 		generatescript=$MACRODIR/legotrain_generate_meta.C
 		echo "Generating for MCgen dataset (meta macro)"
 	else 
