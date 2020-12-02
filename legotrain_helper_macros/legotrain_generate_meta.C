@@ -161,25 +161,24 @@ void legotrain_generate_meta(const char *module = "__ALL__")
       if (index > 1 && meta_index == 0)
         continue; //meta datasets are filled for meta_index>=1, standard dataset are filled for meta_index=0
 
-      TString dataTag;
-      dataTag.Form("%s_%s_%s_%d", dataBasePath_array[meta_index].Data(), archiveName.Data(), dataAnchor.Data(), nFiles);
-
-      dataTag.ReplaceAll(";", "__");
-      dataTag.ReplaceAll("/", "__");
-      dataTag.ReplaceAll(".root", "");
-      dataTag.ReplaceAll(".zip", "");
-
-      TString dataFileName(dataTag + ".txt");
-
-      Printf("\n>>>> Test files are taken from: %s", dataFileName.Data());
-      if (index == 1)
-        plugin->SetFileForTestMode(Form("%s/%s", dataFolder.Data(), dataFileName.Data()));
-      else
-        plugin->SetFileForTestMode(Form("%s/%s", dataFolder.Data(), meta_fileName.Data()));
-
       // Copy dataset locally
-      if (atoi(gSystem->Getenv("AOD")) != 100)
+      if (AOD != 100)
       {
+        TString dataTag;
+        dataTag.Form("%s_%s_%s_%d", dataBasePath_array[meta_index].Data(), archiveName.Data(), dataAnchor.Data(), nFiles);
+
+        dataTag.ReplaceAll(";", "__");
+        dataTag.ReplaceAll("/", "__");
+        dataTag.ReplaceAll(".root", "");
+        dataTag.ReplaceAll(".zip", "");
+
+        TString dataFileName(dataTag + ".txt");
+
+        Printf("\n>>>> Test files are taken from: %s", dataFileName.Data());
+        if (index == 1)
+          plugin->SetFileForTestMode(Form("%s/%s", dataFolder.Data(), dataFileName.Data()));
+        else
+          plugin->SetFileForTestMode(Form("%s/%s", dataFolder.Data(), meta_fileName.Data()));
 
         // check if files are already copied
         if (gSystem->AccessPathName(dataFileName))
@@ -219,19 +218,19 @@ void legotrain_generate_meta(const char *module = "__ALL__")
           // mark files as used (for cleanup)
           gSystem->Exec(Form("touch %s", dataFileName.Data()));
         }
-      }
-      if (index > 1)
-      {
-        //read input files paths for this subdataset and add it to the meta dataset
-        string line;
-        ifstream myfile(Form("%s/%s", dataFolder.Data(), dataFileName.Data()));
-        if (myfile.is_open())
+        if (index > 1)
         {
-          while (getline(myfile, line))
+          //read input files paths for this subdataset and add it to the meta dataset
+          string line;
+          ifstream myfile(Form("%s/%s", dataFolder.Data(), dataFileName.Data()));
+          if (myfile.is_open())
           {
-            outfile << line << std::endl;
+            while (getline(myfile, line))
+            {
+              outfile << line << std::endl;
+            }
+            myfile.close();
           }
-          myfile.close();
         }
       }
     }
