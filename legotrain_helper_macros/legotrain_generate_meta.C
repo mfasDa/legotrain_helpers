@@ -6,311 +6,313 @@
 
 void legotrain_generate_meta(const char *module = "__ALL__")
 {
-    Int_t nFiles = 2;                                                                               //TString(gSystem->Getenv("TEST_FILES_NO")).Atoi();//TEST_FILES_NO
-    Int_t nTestEvents = TString(gSystem->Getenv("TEST_FILES_NO")).Atoi();                           //for the on the fly trains this contains the number of test events
-    TString dataAnchor(gSystem->Getenv("FILE_PATTERN"));                                            //FILE_PATTERN
-    Int_t splitMaxInputFileNumber = TString(gSystem->Getenv("SPLIT_MAX_INPUT_FILE_NUMBER")).Atoi(); //SPLIT_MAX_INPUT_FILE_NUMBER
-    Int_t maxMergeFiles = TString(gSystem->Getenv("MAX_MERGE_FILES")).Atoi();                       //MAX_MERGE_FILES
-    Int_t debugLevel = TString(gSystem->Getenv("DEBUG_LEVEL")).Atoi();                              //DEBUG_LEVEL
-    Int_t ttl = TString(gSystem->Getenv("TTL")).Atoi();                                             //TTL
-    TString excludeFiles(gSystem->Getenv("EXCLUDE_FILES"));                                         //EXCLUDE_FILES
-    TString friendChainNames(gSystem->Getenv("FRIEND_CHAIN_NAMES"));                                //FRIEND_CHAIN_NAMES
-    TString friendChainLibraries(gSystem->Getenv("FRIEND_CHAIN_LIBRARIES"));                        //FRIEND_CHAIN_LIBRARIES
-    TString additionalpackages(gSystem->Getenv("ADDITIONAL_PACKAGES"));                             //ADDITIONAL_PACKAGES
-    TString periodName(gSystem->Getenv("PERIOD_NAME"));                                             //dataset name
-    Int_t trainId = TString(gSystem->Getenv("TRAIN_ID")).Atoi();                                    //train id
+  Int_t nFiles = 2;                                                                               //TString(gSystem->Getenv("TEST_FILES_NO")).Atoi();//TEST_FILES_NO
+  Int_t nTestEvents = TString(gSystem->Getenv("TEST_FILES_NO")).Atoi();                           //for the on the fly trains this contains the number of test events
+  TString dataAnchor(gSystem->Getenv("FILE_PATTERN"));                                            //FILE_PATTERN
+  Int_t splitMaxInputFileNumber = TString(gSystem->Getenv("SPLIT_MAX_INPUT_FILE_NUMBER")).Atoi(); //SPLIT_MAX_INPUT_FILE_NUMBER
+  Int_t maxMergeFiles = TString(gSystem->Getenv("MAX_MERGE_FILES")).Atoi();                       //MAX_MERGE_FILES
+  Int_t debugLevel = TString(gSystem->Getenv("DEBUG_LEVEL")).Atoi();                              //DEBUG_LEVEL
+  Int_t ttl = TString(gSystem->Getenv("TTL")).Atoi();                                             //TTL
+  TString excludeFiles(gSystem->Getenv("EXCLUDE_FILES"));                                         //EXCLUDE_FILES
+  TString friendChainNames(gSystem->Getenv("FRIEND_CHAIN_NAMES"));                                //FRIEND_CHAIN_NAMES
+  TString friendChainLibraries(gSystem->Getenv("FRIEND_CHAIN_LIBRARIES"));                        //FRIEND_CHAIN_LIBRARIES
+  TString additionalpackages(gSystem->Getenv("ADDITIONAL_PACKAGES"));                             //ADDITIONAL_PACKAGES
+  TString periodName(gSystem->Getenv("PERIOD_NAME"));                                             //dataset name
+  Int_t trainId = TString(gSystem->Getenv("TRAIN_ID")).Atoi();                                    //train id
 
-    TString dataBasePath_array[50];   //stores path to the test files
-    int index = 0;
-    int index_read = 0;
-    dataBasePath_array[0] = gSystem->Getenv("TEST_DIR");
+  TString dataBasePath_array[50]; //stores path to the test files
+  int index = 0;
+  int index_read = 0;
+  dataBasePath_array[0] = gSystem->Getenv("TEST_DIR");
 
-    do{
-      index++;//index 0 contains the parent dataset
-      index_read++;
-      dataBasePath_array[index] = (gSystem->Getenv(Form("TEST_DIR_child_%i", index_read)));
-      
-      if(dataBasePath_array[index].EqualTo("-1")){
-	index--;//overwrite this index in the next loop because the child is deactivated
-      }
-    }while(index==0 ||(dataBasePath_array[index].Data()!=NULL && dataBasePath_array[index].Length()>1));
-    
-   
-    //TString dataFolder("/home/mazimmer/Test2/dataFolder");//put here a local directory
-    TString dataFolder("./");
-    Int_t AOD = TString(gSystem->Getenv("AOD")).Atoi();         //AOD: 0 ESD, 1 AOD, 2 AOD produced together with ESD, 3 Kinematics only, 4 ESD (special WSDD production) 5 ESD cpass1 (Barrel), 6 ESD cpass1 (Outer)
-    Int_t isPP = strcmp(gSystem->Getenv("PP"), "true");         //0 false, 1 true //PP
-    TString validOutputFiles = gSystem->Getenv("OUTPUT_FILES"); //OUTPUT_FILES
+  do
+  {
+    index++; //index 0 contains the parent dataset
+    index_read++;
+    dataBasePath_array[index] = (gSystem->Getenv(Form("TEST_DIR_child_%i", index_read)));
 
-    const char *train_name = "lego_train";
-
-    Bool_t generateProduction = kFALSE;
-
-    if (strcmp(module, "__ALL__") == 0)
-        module = "";
-
-    if (strcmp(module, "__TRAIN__") == 0)
+    if (dataBasePath_array[index].EqualTo("-1"))
     {
-        generateProduction = kTRUE;
-        module = "";
+      index--; //overwrite this index in the next loop because the child is deactivated
     }
+  } while (index == 0 || (dataBasePath_array[index].Data() != NULL && dataBasePath_array[index].Length() > 1));
 
-    gSystem->Load("libANALYSIS");
-    gSystem->Load("libANALYSISalice");
+  //TString dataFolder("/home/mazimmer/Test2/dataFolder");//put here a local directory
+  TString dataFolder("./");
+  Int_t AOD = TString(gSystem->Getenv("AOD")).Atoi();         //AOD: 0 ESD, 1 AOD, 2 AOD produced together with ESD, 3 Kinematics only, 4 ESD (special WSDD production) 5 ESD cpass1 (Barrel), 6 ESD cpass1 (Outer)
+  Int_t isPP = strcmp(gSystem->Getenv("PP"), "true");         //0 false, 1 true //PP
+  TString validOutputFiles = gSystem->Getenv("OUTPUT_FILES"); //OUTPUT_FILES
 
-    if (atoi(gSystem->Getenv("ADDTASK_NEEDS_ALIEN")) == 1)
-    {
-        Printf("Connecting to AliEn...");
-        TGrid::Connect("alien:");
-    }
+  const char *train_name = "lego_train";
 
-    TObjArray *arr = AliAnalysisTaskCfg::ExtractModulesFrom("MLTrainDefinition.cfg");
+  Bool_t generateProduction = kFALSE;
 
-    Printf(">>>>>>> Read train configuration");
-    arr->Print();
+  if (strcmp(module, "__ALL__") == 0)
+    module = "";
 
-    AliAnalysisAlien *plugin = new AliAnalysisAlien(train_name);
-    // General plugin settings here
-    plugin->SetProductionMode();
+  if (strcmp(module, "__TRAIN__") == 0)
+  {
+    generateProduction = kTRUE;
+    module = "";
+  }
 
-    plugin->SetAPIVersion("V1.1x");
+  gSystem->Load("libANALYSIS");
+  gSystem->Load("libANALYSISalice");
 
-    // libraries because we start with root!
-    const char *rootLibs = "libVMC.so libPhysics.so libTree.so libMinuit.so libProof.so libSTEERBase.so libESD.so libAOD.so";
-    plugin->SetAdditionalRootLibs(rootLibs);
+  if (atoi(gSystem->Getenv("ADDTASK_NEEDS_ALIEN")) == 1)
+  {
+    Printf("Connecting to AliEn...");
+    TGrid::Connect("alien:");
+  }
 
-    plugin->SetJobTag("test/test");
+  TObjArray *arr = AliAnalysisTaskCfg::ExtractModulesFrom("MLTrainDefinition.cfg");
 
-    plugin->SetMaxMergeFiles(maxMergeFiles);
-    plugin->SetTTL(ttl);
-    plugin->SetAnalysisMacro(Form("%s.C", train_name));
-    //plugin->SetInputFormat("xml-single");
-    plugin->SetAnalysisMacro(Form("%s.C", train_name));
-    plugin->SetValidationScript("validation.sh");
+  Printf(">>>>>>> Read train configuration");
+  arr->Print();
 
-    plugin->SetRegisterExcludes(excludeFiles + " AliAOD.root");
+  AliAnalysisAlien *plugin = new AliAnalysisAlien(train_name);
+  // General plugin settings here
+  plugin->SetProductionMode();
+
+  plugin->SetAPIVersion("V1.1x");
+
+  // libraries because we start with root!
+  const char *rootLibs = "libVMC.so libPhysics.so libTree.so libMinuit.so libProof.so libSTEERBase.so libESD.so libAOD.so";
+  plugin->SetAdditionalRootLibs(rootLibs);
+
+  plugin->SetJobTag("test/test");
+
+  plugin->SetMaxMergeFiles(maxMergeFiles);
+  plugin->SetTTL(ttl);
+  plugin->SetAnalysisMacro(Form("%s.C", train_name));
+  //plugin->SetInputFormat("xml-single");
+  plugin->SetAnalysisMacro(Form("%s.C", train_name));
+  plugin->SetValidationScript("validation.sh");
+
+  plugin->SetRegisterExcludes(excludeFiles + " AliAOD.root");
+  if (friendChainNames.Length() > 0)
+  {
+    if (friendChainLibraries.Length() > 0)
+      plugin->SetFriendChainName(friendChainNames, friendChainLibraries);
+    else
+      plugin->SetFriendChainName(friendChainNames);
+  }
+  else if (friendChainLibraries.Length() > 0)
+  {
+    Printf("friendChainLibraries: %s", friendChainLibraries.Data());
+    plugin->SetAdditionalRootLibs(Form("%s %s", rootLibs, friendChainLibraries.Data()));
+  }
+
+  // jemalloc
+  additionalpackages += " jemalloc::v3.6.0";
+  plugin->AddExternalPackage(additionalpackages);
+
+  plugin->SetJDLName(Form("%s.jdl", train_name));
+  plugin->SetExecutable(Form("%s.sh", train_name));
+  plugin->SetSplitMode("se");
+
+  plugin->SetGridOutputDir("./");
+  plugin->SetGridWorkingDir("./");
+
+  if (!generateProduction)
+    plugin->SetKeepLogs(kTRUE);
+
+  plugin->SetMergeViaJDL();
+
+  if (dataFolder.Length() == 0)
+  {
+    Printf("ERROR: TRAIN_TESTDATA not set. Exiting...");
+    return;
+  }
+
+  if (dataBasePath_array[0].Length() > 0 || index > 1)
+  {
+    TString archiveName = "root_archive.zip";
+    if (AOD == 2)
+      archiveName = "aod_archive.zip";
     if (friendChainNames.Length() > 0)
     {
-        if (friendChainLibraries.Length() > 0)
-            plugin->SetFriendChainName(friendChainNames, friendChainLibraries);
+      friendChainNames = friendChainNames.ReplaceAll(" ", ";");
+      archiveName += ";" + friendChainNames;
+    }
+
+    if (index > 1)
+      plugin->SetNtestFiles((index - 1) * nFiles);
+    else
+      plugin->SetNtestFiles(nFiles);
+
+    // Is MC only?
+    if (AOD == 3)
+    {
+      Printf(">>>> Expecting MC only production");
+      plugin->SetUseMCchain();
+    }
+
+    TString meta_fileName;
+    meta_fileName.Form("__alice__meta__input__%d_%s.txt", trainId, periodName.Data());
+    std::ofstream outfile(meta_fileName);
+
+    TString cdir = gSystem->WorkingDirectory();
+    gSystem->cd(dataFolder);
+
+    for (int meta_index = 0; meta_index < index; meta_index++)
+    {
+      //if no meta dataset
+      if (index > 1 && meta_index == 0)
+        continue; //meta datasets are filled for meta_index>=1, standard dataset are filled for meta_index=0
+
+      TString dataTag;
+      dataTag.Form("%s_%s_%s_%d", dataBasePath_array[meta_index].Data(), archiveName.Data(), dataAnchor.Data(), nFiles);
+
+      dataTag.ReplaceAll(";", "__");
+      dataTag.ReplaceAll("/", "__");
+      dataTag.ReplaceAll(".root", "");
+      dataTag.ReplaceAll(".zip", "");
+
+      TString dataFileName(dataTag + ".txt");
+
+      Printf("\n>>>> Test files are taken from: %s", dataFileName.Data());
+      if (index == 1)
+        plugin->SetFileForTestMode(Form("%s/%s", dataFolder.Data(), dataFileName.Data()));
+      else
+        plugin->SetFileForTestMode(Form("%s/%s", dataFolder.Data(), meta_fileName.Data()));
+
+      // Copy dataset locally
+      if (atoi(gSystem->Getenv("AOD")) != 100)
+      {
+
+        // check if files are already copied
+        if (gSystem->AccessPathName(dataFileName))
+        {
+          if (!gGrid)
+          {
+            Printf("Connecting to AliEn...");
+            TGrid::Connect("alien:");
+          }
+
+          // special treatment for non-officially produced productions
+          Bool_t specialSet = kFALSE;
+          if (periodName == "AMPT_LHC12g6" || periodName == "AMPT_LHC12c3")
+            specialSet = kTRUE;
+
+          Bool_t result = kFALSE;
+
+          if (specialSet)
+          {
+            result = plugin->CopyLocalDataset(dataBasePath_array[meta_index].Data(), "Kinematics.root", nFiles, dataFileName, "", dataTag);
+            if (!plugin->CopyLocalDataset(dataBasePath_array[meta_index].Data(), dataAnchor, nFiles, dataFileName, "", dataTag))
+              result = kFALSE;
+          }
+          else
+            result = plugin->CopyLocalDataset(dataBasePath_array[meta_index].Data(), dataAnchor, nFiles, dataFileName, archiveName, dataTag);
+
+          if (!result)
+          {
+            gSystem->Unlink(dataFileName);
+            gSystem->Exec(Form("rm -rf %s", dataTag.Data()));
+            Printf("ERROR: Could not copy test files. Exiting...");
+            return;
+          }
+        }
         else
-            plugin->SetFriendChainName(friendChainNames);
-    }
-    else if (friendChainLibraries.Length() > 0)
-    {
-        Printf("friendChainLibraries: %s", friendChainLibraries.Data());
-        plugin->SetAdditionalRootLibs(Form("%s %s", rootLibs, friendChainLibraries.Data()));
-    }
-
-    // jemalloc
-    additionalpackages += " jemalloc::v3.6.0";
-    plugin->AddExternalPackage(additionalpackages);
-
-    plugin->SetJDLName(Form("%s.jdl", train_name));
-    plugin->SetExecutable(Form("%s.sh", train_name));
-    plugin->SetSplitMode("se");
-
-    plugin->SetGridOutputDir("./");
-    plugin->SetGridWorkingDir("./");
-
-    if (!generateProduction)
-        plugin->SetKeepLogs(kTRUE);
-
-    plugin->SetMergeViaJDL();
-
-    if (dataFolder.Length() == 0)
-    {
-        Printf("ERROR: TRAIN_TESTDATA not set. Exiting...");
-        return;
-    }
-
-    if (dataBasePath_array[0].Length() > 0 || index>1)
-    {
-        TString archiveName = "root_archive.zip";
-        if (AOD == 2)
-            archiveName = "aod_archive.zip";
-        if (friendChainNames.Length() > 0){
-	  friendChainNames = friendChainNames.ReplaceAll(" ", ";");
-	  archiveName += ";" + friendChainNames;
-	}
-
-	if(index>1)
-	  plugin->SetNtestFiles((index-1)*nFiles);
-	else
-	  plugin->SetNtestFiles(nFiles);
-
-        // Is MC only?
-        if (AOD == 3)
         {
-            Printf(">>>> Expecting MC only production");
-            plugin->SetUseMCchain();
+          // mark files as used (for cleanup)
+          gSystem->Exec(Form("touch %s", dataFileName.Data()));
         }
-
-	TString meta_fileName;
-	meta_fileName.Form("__alice__meta__input__%d_%s.txt", trainId, periodName.Data());
-	std::ofstream outfile (meta_fileName);
-
-	TString cdir = gSystem->WorkingDirectory();
-	gSystem->cd(dataFolder);
-	
-	for(int meta_index=0; meta_index<index; meta_index++){
-	  //if no meta dataset
-	  if(index>1 && meta_index==0)
-	    continue;//meta datasets are filled for meta_index>=1, standard dataset are filled for meta_index=0
-
-	  TString dataTag;
-	  dataTag.Form("%s_%s_%s_%d", dataBasePath_array[meta_index].Data(), archiveName.Data(), dataAnchor.Data(), nFiles);
-	  
-	  dataTag.ReplaceAll(";", "__");
-	  dataTag.ReplaceAll("/", "__");
-	  dataTag.ReplaceAll(".root", "");
-	  dataTag.ReplaceAll(".zip", "");
-	  
-	  TString dataFileName(dataTag + ".txt");
-	  
-	  Printf("\n>>>> Test files are taken from: %s", dataFileName.Data());
-	  if(index==1)
-	    plugin->SetFileForTestMode(Form("%s/%s", dataFolder.Data(), dataFileName.Data()));
-	  else
-	    plugin->SetFileForTestMode(Form("%s/%s", dataFolder.Data(), meta_fileName.Data()));
-	  
-	  // Copy dataset locally
-	  if (atoi(gSystem->Getenv("AOD")) != 100)
-	    {
-	      
-	      // check if files are already copied
-	      if (gSystem->AccessPathName(dataFileName))
-		{
-		  if (!gGrid)
-		    {
-		      Printf("Connecting to AliEn...");
-		      TGrid::Connect("alien:");
-		    }
-		  
-		  // special treatment for non-officially produced productions
-		  Bool_t specialSet = kFALSE;
-		  if (periodName == "AMPT_LHC12g6" || periodName == "AMPT_LHC12c3")
-                    specialSet = kTRUE;
-		  
-		  Bool_t result = kFALSE;
-		  
-		  if (specialSet)
-		    {
-		      result = plugin->CopyLocalDataset(dataBasePath_array[meta_index].Data(), "Kinematics.root", nFiles, dataFileName, "", dataTag);
-		      if (!plugin->CopyLocalDataset(dataBasePath_array[meta_index].Data(), dataAnchor, nFiles, dataFileName, "", dataTag))
-                        result = kFALSE;
-		    }
-		  else
-                    result = plugin->CopyLocalDataset(dataBasePath_array[meta_index].Data(), dataAnchor, nFiles, dataFileName, archiveName, dataTag);
-		  
-		  if (!result)
-		    {
-		      gSystem->Unlink(dataFileName);
-		      gSystem->Exec(Form("rm -rf %s", dataTag.Data()));
-		      Printf("ERROR: Could not copy test files. Exiting...");
-		      return;
-		    }
-		}
-	      else
-		{
-		  // mark files as used (for cleanup)
-		  gSystem->Exec(Form("touch %s", dataFileName.Data()));
-		}
-	      
-	    }
-	  if(index>1){
-	    //read input files paths for this subdataset and add it to the meta dataset
-	    string line;
-	    ifstream myfile (Form("%s/%s", dataFolder.Data(), dataFileName.Data()));
-	    if (myfile.is_open()){
-	      while ( getline (myfile,line) )
-		{
-		  outfile << line << std::endl;
-		}
-	      myfile.close();
-	    }
-	  }
-	}
-	outfile.close();
-	gSystem->cd(cdir);
-    }
-
-    // execute custom configuration
-    Int_t error = 0;
-    gROOT->Macro("globalvariables.C", &error);
-    if (error != 0)
-    {
-        Printf("ERROR: globalvariables.C was not executed successfully...");
-        return;
-    }
-    
-    // Load modules here
-    plugin->AddModules(arr);
-    plugin->CreateAnalysisManager("train", "handlers.C");
-
-    // specific if data is processed or MC is generated on the fly
-    if (atoi(gSystem->Getenv("AOD")) == 100)
-    { // MC production
-        Long64_t totalEvents = TString(gSystem->Getenv("GEN_TOTAL_EVENTS")).Atoll();
-
-        //Printf("%lld %d", totalEvents, splitMaxInputFileNumber);
-
-        Long64_t neededJobs = totalEvents / splitMaxInputFileNumber;
-
-        plugin->SetMCLoop(true);
-        plugin->SetSplitMode(Form("production:1-%lld", neededJobs));
-        plugin->SetNMCjobs(neededJobs);
-        plugin->SetNMCevents((generateProduction) ? splitMaxInputFileNumber : nTestEvents);
-        plugin->SetExecutableCommand("aliroot -b -q");
-
-        //plugin->AddDataFile("dummy.xml"); // TODO to be removed
-        // /alice/cern.ch/user/a/alitrain/
-
-        plugin->SetKeepLogs(kTRUE);
-    }
-    else
-    { // Data, ESD/AOD
-        plugin->SetSplitMaxInputFileNumber(splitMaxInputFileNumber);
-
-        //plugin->AddDataFile(Form("$1/%s/lego_train_input.xml", trainFolder));
-
-        plugin->SetExecutableCommand("root -b -q");
-        plugin->SetInputFormat("xml-single");
-    }
-
-    AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
-    mgr->SetDebugLevel(debugLevel);
-    //mgr->SetNSysInfo((isPP == 1) ? 2000 : 100);
-    mgr->SetNSysInfo((isPP == 1) ? 1000 : 40);
-
-    mgr->SetFileInfoLog("fileinfo.log");
-
-
-    
-    if (generateProduction)
-        plugin->GenerateTrain(train_name);
-    else
-        plugin->GenerateTest(train_name, module);
-
-    // check for illegally defined output files
-    validOutputFiles += "," + excludeFiles;
-    TString outputFiles = plugin->GetListOfFiles("out");
-    TObjArray *tokens = outputFiles.Tokenize(",");
-
-    Bool_t valid = kTRUE;
-    for (Int_t i = 0; i < tokens->GetEntries(); i++)
-    {
-        if (!validOutputFiles.Contains(tokens->At(i)->GetName()))
+      }
+      if (index > 1)
+      {
+        //read input files paths for this subdataset and add it to the meta dataset
+        string line;
+        ifstream myfile(Form("%s/%s", dataFolder.Data(), dataFileName.Data()));
+        if (myfile.is_open())
         {
-            Printf("ERROR: Output file %s requested which is not among the defined ones for this train (%s)", tokens->At(i)->GetName(), validOutputFiles.Data());
-            valid = kFALSE;
+          while (getline(myfile, line))
+          {
+            outfile << line << std::endl;
+          }
+          myfile.close();
         }
+      }
     }
-    delete tokens;
+    outfile.close();
+    gSystem->cd(cdir);
+  }
 
-    if (!valid)
+  // execute custom configuration
+  Int_t error = 0;
+  gROOT->Macro("globalvariables.C", &error);
+  if (error != 0)
+  {
+    Printf("ERROR: globalvariables.C was not executed successfully...");
+    return;
+  }
+
+  // Load modules here
+  plugin->AddModules(arr);
+  plugin->CreateAnalysisManager("train", "handlers.C");
+
+  // specific if data is processed or MC is generated on the fly
+  if (atoi(gSystem->Getenv("AOD")) == 100)
+  { // MC production
+    Long64_t totalEvents = TString(gSystem->Getenv("GEN_TOTAL_EVENTS")).Atoll();
+
+    //Printf("%lld %d", totalEvents, splitMaxInputFileNumber);
+
+    Long64_t neededJobs = totalEvents / splitMaxInputFileNumber;
+
+    plugin->SetMCLoop(true);
+    plugin->SetSplitMode(Form("production:1-%lld", neededJobs));
+    plugin->SetNMCjobs(neededJobs);
+    plugin->SetNMCevents((generateProduction) ? splitMaxInputFileNumber : nTestEvents);
+    plugin->SetExecutableCommand("aliroot -b -q");
+
+    //plugin->AddDataFile("dummy.xml"); // TODO to be removed
+    // /alice/cern.ch/user/a/alitrain/
+
+    plugin->SetKeepLogs(kTRUE);
+  }
+  else
+  { // Data, ESD/AOD
+    plugin->SetSplitMaxInputFileNumber(splitMaxInputFileNumber);
+
+    //plugin->AddDataFile(Form("$1/%s/lego_train_input.xml", trainFolder));
+
+    plugin->SetExecutableCommand("root -b -q");
+    plugin->SetInputFormat("xml-single");
+  }
+
+  AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
+  mgr->SetDebugLevel(debugLevel);
+  //mgr->SetNSysInfo((isPP == 1) ? 2000 : 100);
+  mgr->SetNSysInfo((isPP == 1) ? 1000 : 40);
+
+  mgr->SetFileInfoLog("fileinfo.log");
+
+  if (generateProduction)
+    plugin->GenerateTrain(train_name);
+  else
+    plugin->GenerateTest(train_name, module);
+
+  // check for illegally defined output files
+  validOutputFiles += "," + excludeFiles;
+  TString outputFiles = plugin->GetListOfFiles("out");
+  TObjArray *tokens = outputFiles.Tokenize(",");
+
+  Bool_t valid = kTRUE;
+  for (Int_t i = 0; i < tokens->GetEntries(); i++)
+  {
+    if (!validOutputFiles.Contains(tokens->At(i)->GetName()))
     {
-        Printf(">>>>>>>>> Invalid output files requested. <<<<<<<<<<<<");
-        gSystem->Unlink("lego_train.C");
+      Printf("ERROR: Output file %s requested which is not among the defined ones for this train (%s)", tokens->At(i)->GetName(), validOutputFiles.Data());
+      valid = kFALSE;
     }
+  }
+  delete tokens;
+
+  if (!valid)
+  {
+    Printf(">>>>>>>>> Invalid output files requested. <<<<<<<<<<<<");
+    gSystem->Unlink("lego_train.C");
+  }
 }
