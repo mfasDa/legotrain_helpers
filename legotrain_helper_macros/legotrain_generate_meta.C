@@ -76,8 +76,6 @@ void legotrain_generate_meta(const char *module = "__ALL__")
 
   plugin->SetAPIVersion("V1.1x");
 
-  plugin->SetAdditionalRootLibs(rootLibs);
-
   plugin->SetJobTag("test/test");
 
   plugin->SetMaxMergeFiles(maxMergeFiles);
@@ -98,7 +96,7 @@ void legotrain_generate_meta(const char *module = "__ALL__")
   else if (friendChainLibraries.Length() > 0)
   {
     Printf("friendChainLibraries: %s", friendChainLibraries.Data());
-    plugin->SetAdditionalRootLibs(Form("%s %s", rootLibs, friendChainLibraries.Data()));
+    plugin->SetAdditionalRootLibs(friendChainLibraries.Data());
   }
 
   // jemalloc
