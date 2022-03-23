@@ -58,9 +58,6 @@ void legotrain_generate_single(const char *module = "__ALL__")
 
   plugin->SetAPIVersion("V1.1x");
 
-  // libraries because we start with root!
-  plugin->SetAdditionalRootLibs("libVMC.so libPhysics.so libTree.so libMinuit.so libProof.so libSTEERBase.so libESD.so libAOD.so");
-
   plugin->SetJobTag("test/test");
 
   plugin->SetMaxMergeFiles(maxMergeFiles);

@@ -76,8 +76,6 @@ void legotrain_generate_meta(const char *module = "__ALL__")
 
   plugin->SetAPIVersion("V1.1x");
 
-  // libraries because we start with root!
-  const char *rootLibs = "libVMC.so libPhysics.so libTree.so libMinuit.so libProof.so libSTEERBase.so libESD.so libAOD.so";
   plugin->SetAdditionalRootLibs(rootLibs);
 
   plugin->SetJobTag("test/test");
