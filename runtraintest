@@ -56,6 +56,23 @@ function HandleAlirootError
   esac
  }
 
+function SafeReadlink
+  {
+    local decodepath=$1
+    local result=
+    if [ "x$(uname -a | grep Darwin)"  != "x" ]; then
+      # MacOS, needs greadlink from homebrew
+      result=$(greadlink -f $decodepath)
+    else
+      result=$(readlink -f $decodepath)
+    fi
+    readlinkresult=$result 
+  }
+
+SafeReadlink $0
+SOURCEBASE=$readlinkresult
+MACRODIR=`dirname $SOURCEBASE`/legotrain_helper_macros
+
 CheckAliRoot
 result=$?
 if [ $result -ne 0 ]; then
@@ -72,8 +89,21 @@ fi
 
 source env.sh
 MYEXECUTABLE=root
+LIBMACRO=
 if [ "x$GEN_MACRO_PATH" != "x" ]; then
-  MYEXECUTABLE=aliroot
+  LIBMACRO=$MACRODIR/loadlibs.C
+  # MCGen trains no longer rely on aliroot for AliRun, however set a default ALIEN_PROC_ID
+  if [ "x$ALIEN_PROC_ID" == "x" ]; then
+    SEED=$RANDOM
+    echo "MCGen train: Setting ALIEN_PROC_ID to a random value $SEED"
+    export ALIEN_PROC_ID=$SEED
+  else
+    echo "MCGen train: ALIEN_PROC_ID is already set to $ALIEN_PROC_ID"
+  fi
 fi
-cmd=$(printf "%s -b -q lego_train.C" $MYEXECUTABLE)
+cmd=$(printf "%s -b -q" $MYEXECUTABLE)
+if [ "x$LIBMACRO" != "x" ]; then
+  cmd=$(printf "%s %s" "$cmd"  "$LIBMACRO")
+fi 
+cmd=$(printf "%s lego_train.C" "$cmd")
 eval $cmd
